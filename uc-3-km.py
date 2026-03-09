@@ -272,15 +272,17 @@ if run_btn:
                 time.sleep(0.05)
 
         else:  # Gemini
-            from google import genai as google_genai
-            client_g = google_genai.Client(api_key=api_key)
+            import requests
+            headers = {"Content-Type": "application/json"}
+            url = f"https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent?key={api_key}"
             for i, kw in enumerate(keywords):
                 status.caption(f"Vectorising keywords {i+1}/{n}...")
-                result = client_g.models.embed_content(
-                    model="text-embedding-004",
-                    contents=kw,
-                )
-                kw_embeddings.append(np.array(result.embeddings[0].values, dtype=np.float32))
+                body = {"model": "models/text-embedding-004", "content": {"parts": [{"text": kw}]}}
+                resp = requests.post(url, json=body, headers=headers)
+                if resp.status_code != 200:
+                    st.error(f"API error: {resp.status_code} {resp.text}")
+                    st.stop()
+                kw_embeddings.append(np.array(resp.json()["embedding"]["values"], dtype=np.float32))
                 prog.progress((i + 1) / n)
                 if (i + 1) % batch_size == 0:
                     time.sleep(0.1)
