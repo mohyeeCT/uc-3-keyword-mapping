@@ -397,7 +397,7 @@ if run_btn or resume_btn:
                 'Current Landing URL': cur_url if has_url_col else 'N/A',
                 'Best Matched Page': best_url,
                 'Best Match Score': round(best_score, 4),
-                'Current Page Relevance': round(cur_relevance, 4) if cur_relevance is not None else 'N/A',
+                'Current Page Relevance': round(cur_relevance, 4) if cur_relevance is not None else None,
                 'Relevance Tier': tier,
                 'Mismatch': mismatch,
             })
