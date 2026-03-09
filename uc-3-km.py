@@ -272,16 +272,15 @@ if run_btn:
                 time.sleep(0.05)
 
         else:  # Gemini
-            import google.generativeai as genai
-            genai.configure(api_key=api_key)
+            from google import genai as google_genai
+            client_g = google_genai.Client(api_key=api_key)
             for i, kw in enumerate(keywords):
                 status.caption(f"Vectorising keywords {i+1}/{n}...")
-                result = genai.embed_content(
-                    model="models/text-embedding-004",
-                    content=kw,
-                    task_type="SEMANTIC_SIMILARITY"
+                result = client_g.models.embed_content(
+                    model="text-embedding-004",
+                    contents=kw,
                 )
-                kw_embeddings.append(np.array(result['embedding'], dtype=np.float32))
+                kw_embeddings.append(np.array(result.embeddings[0].values, dtype=np.float32))
                 prog.progress((i + 1) / n)
                 if (i + 1) % batch_size == 0:
                     time.sleep(0.1)
