@@ -274,18 +274,17 @@ if run_btn:
         else:  # Gemini
             import google.generativeai as genai
             genai.configure(api_key=api_key)
-            for i in range(0, n, batch_size):
-                batch = keywords[i:i+batch_size]
-                status.caption(f"Vectorising keywords {min(i+batch_size,n)}/{n}...")
+            for i, kw in enumerate(keywords):
+                status.caption(f"Vectorising keywords {i+1}/{n}...")
                 result = genai.embed_content(
                     model="models/text-embedding-004",
-                    content=batch,
-                    task_type="RETRIEVAL_QUERY"
+                    content=kw,
+                    task_type="SEMANTIC_SIMILARITY"
                 )
-                for emb in result['embedding']:
-                    kw_embeddings.append(np.array(emb, dtype=np.float32))
-                prog.progress(min((i + batch_size) / n, 1.0))
-                time.sleep(0.05)
+                kw_embeddings.append(np.array(result['embedding'], dtype=np.float32))
+                prog.progress((i + 1) / n)
+                if (i + 1) % batch_size == 0:
+                    time.sleep(0.1)
 
     except Exception as e:
         st.error(f"API error: {e}")
