@@ -272,7 +272,7 @@ if run_btn:
                 time.sleep(0.05)
 
         else:  # Gemini
-            import requests
+            import requests, re
             headers = {"Content-Type": "application/json"}
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
             for i, kw in enumerate(keywords):
@@ -282,14 +282,24 @@ if run_btn:
                     "content": {"parts": [{"text": kw}]},
                     "taskType": "SEMANTIC_SIMILARITY"
                 }
-                resp = requests.post(url, json=body, headers=headers)
-                if resp.status_code != 200:
-                    st.error(f"API error: {resp.status_code} {resp.text}")
+                for attempt in range(5):
+                    resp = requests.post(url, json=body, headers=headers)
+                    if resp.status_code == 200:
+                        break
+                    elif resp.status_code == 429:
+                        retry_match = re.search(r'retry in (\d+)', resp.text)
+                        wait = int(retry_match.group(1)) + 2 if retry_match else 60
+                        status.caption(f"Rate limit hit — waiting {wait}s... ({i+1}/{n})")
+                        time.sleep(wait)
+                    else:
+                        st.error(f"API error: {resp.status_code} {resp.text}")
+                        st.stop()
+                else:
+                    st.error("Failed after 5 retries due to rate limiting.")
                     st.stop()
                 kw_embeddings.append(np.array(resp.json()["embedding"]["values"], dtype=np.float32))
                 prog.progress((i + 1) / n)
-                if (i + 1) % batch_size == 0:
-                    time.sleep(0.1)
+                time.sleep(0.65)  # ~90 req/min to stay under free tier limit
 
     except Exception as e:
         st.error(f"API error: {e}")
