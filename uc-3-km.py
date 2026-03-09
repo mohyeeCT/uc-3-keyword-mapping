@@ -274,10 +274,14 @@ if run_btn:
         else:  # Gemini
             import requests
             headers = {"Content-Type": "application/json"}
-            url = f"https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent?key={api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
             for i, kw in enumerate(keywords):
                 status.caption(f"Vectorising keywords {i+1}/{n}...")
-                body = {"model": "models/text-embedding-004", "content": {"parts": [{"text": kw}]}}
+                body = {
+                    "model": "models/gemini-embedding-001",
+                    "content": {"parts": [{"text": kw}]},
+                    "taskType": "SEMANTIC_SIMILARITY"
+                }
                 resp = requests.post(url, json=body, headers=headers)
                 if resp.status_code != 200:
                     st.error(f"API error: {resp.status_code} {resp.text}")
