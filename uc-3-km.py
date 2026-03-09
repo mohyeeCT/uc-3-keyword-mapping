@@ -248,14 +248,26 @@ if not api_key:
     st.info("Add your API key in the sidebar to enable keyword vectorisation.")
 
 run_btn = st.button("▶  Run Analysis", disabled=not ready)
+resume_btn = st.button("⏩  Resume from checkpoint", disabled=not (ready and "kw_cache" in st.session_state and len(st.session_state.get("kw_cache", {})) > 0))
+
+if "kw_cache" in st.session_state and st.session_state.kw_cache:
+    cached_count = len(st.session_state.kw_cache)
+    st.caption(f"Checkpoint: {cached_count} keywords already vectorised. Hit Resume to continue.")
 
 if run_btn:
+    st.session_state.kw_cache = {}  # fresh run clears cache
+
+if run_btn or resume_btn:
     keywords = kw_df[kw_col].dropna().tolist()
     n = len(keywords)
 
+    if "kw_cache" not in st.session_state:
+        st.session_state.kw_cache = {}
+
+    cache = st.session_state.kw_cache
+
     # ── Vectorise keywords
-    kw_embeddings = []
-    prog = st.progress(0)
+    prog = st.progress(len(cache) / n if n > 0 else 0)
     status = st.empty()
 
     try:
@@ -263,11 +275,17 @@ if run_btn:
             import openai
             client = openai.OpenAI(api_key=api_key)
             for i in range(0, n, batch_size):
-                batch = keywords[i:i+batch_size]
+                batch_kws = keywords[i:i+batch_size]
+                # skip already cached
+                to_fetch = [kw for kw in batch_kws if kw not in cache]
+                if not to_fetch:
+                    prog.progress(min((i + batch_size) / n, 1.0))
+                    continue
                 status.caption(f"Vectorising keywords {min(i+batch_size,n)}/{n}...")
-                resp = client.embeddings.create(input=batch, model="text-embedding-3-small")
-                for item in resp.data:
-                    kw_embeddings.append(np.array(item.embedding, dtype=np.float32))
+                resp = client.embeddings.create(input=to_fetch, model="text-embedding-3-small")
+                for kw, item in zip(to_fetch, resp.data):
+                    cache[kw] = np.array(item.embedding, dtype=np.float32)
+                    st.session_state.kw_cache = cache
                 prog.progress(min((i + batch_size) / n, 1.0))
                 time.sleep(0.05)
 
@@ -276,6 +294,9 @@ if run_btn:
             headers = {"Content-Type": "application/json"}
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
             for i, kw in enumerate(keywords):
+                if kw in cache:
+                    prog.progress((i + 1) / n)
+                    continue
                 status.caption(f"Vectorising keywords {i+1}/{n}...")
                 body = {
                     "model": "models/gemini-embedding-001",
@@ -295,9 +316,10 @@ if run_btn:
                         st.error(f"API error: {resp.status_code} {resp.text}")
                         st.stop()
                 else:
-                    st.error("Failed after 5 retries due to rate limiting.")
+                    st.error("Failed after 5 retries. Hit Resume to continue from this point.")
                     st.stop()
-                kw_embeddings.append(np.array(resp.json()["embedding"]["values"], dtype=np.float32))
+                cache[kw] = np.array(resp.json()["embedding"]["values"], dtype=np.float32)
+                st.session_state.kw_cache = cache
                 prog.progress((i + 1) / n)
                 time.sleep(0.65)  # ~90 req/min to stay under free tier limit
 
@@ -307,6 +329,11 @@ if run_btn:
 
     prog.empty()
     status.empty()
+
+    # Build ordered embeddings list from cache
+    kw_embeddings = [cache[kw] for kw in keywords if kw in cache]
+    keywords = [kw for kw in keywords if kw in cache]
+    n = len(keywords)
 
     if len(kw_embeddings) != n:
         st.error(f"Embedding count mismatch: got {len(kw_embeddings)}, expected {n}")
