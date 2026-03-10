@@ -196,7 +196,7 @@ section("01 — Upload Files")
 col1, col2 = st.columns(2)
 with col1:
     st.markdown("**SF Embeddings Export** `required`")
-    st.caption("Screaming Frog → Bulk Export → AI Tab → Export")
+    st.caption("Screaming Frog → Bulk Export → Content → Embeddings Export")
     emb_file = st.file_uploader("Drop embeddings file", type=["csv", "xlsx", "xls"], key="emb", label_visibility="collapsed")
 
 with col2:
