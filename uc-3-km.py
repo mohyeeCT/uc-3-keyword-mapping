@@ -6,8 +6,8 @@ import io
 import time
 
 st.set_page_config(
-    page_title="UC3 — Keyword Mapping",
-    page_icon="🔑",
+    page_title="UC3 - Keyword Mapping",
+    
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -152,7 +152,7 @@ def section(title):
 # ─── SIDEBAR ────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.markdown("### ⚙️ Configuration")
+    st.markdown("### Configuration")
     st.markdown("---")
 
     provider = st.selectbox("Embedding Provider", ["Gemini", "OpenAI"],
@@ -187,11 +187,10 @@ Gemini  : ${cost_gem:.4f}
 
 # ─── MAIN ───────────────────────────────────────────────────────────
 
-st.markdown("# 🔑 Keyword Mapping & Relevance Scoring")
-st.markdown("Matches every keyword to the most semantically relevant page on your site and scores how well the current landing page fits.")
+st.markdown("# Keyword Mapping & Relevance Scoring")
 st.markdown("---")
 
-section("01 — Upload Files")
+section("01 - Upload Files")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -211,15 +210,15 @@ kw_df  = load_file(kw_file)
 col_s1, col_s2 = st.columns(2)
 with col_s1:
     if emb_df is not None:
-        st.success(f"✓ Embeddings — {len(emb_df):,} pages")
+        st.success(f"✓ Embeddings - {len(emb_df):,} pages")
     else:
-        st.error("✗ Embeddings — required")
+        st.error("✗ Embeddings - required")
 with col_s2:
     if kw_df is not None:
         st.session_state['kw_count'] = len(kw_df)
-        st.success(f"✓ Keywords — {len(kw_df):,} rows")
+        st.success(f"✓ Keywords - {len(kw_df):,} rows")
     else:
-        st.error("✗ Keywords — required")
+        st.error("✗ Keywords - required")
 
 emb_col = None
 if emb_df is not None:
@@ -237,11 +236,11 @@ if kw_df is not None and kw_col not in kw_df.columns:
     kw_df = None
 
 if kw_df is not None and url_col not in kw_df.columns:
-    st.warning(f"Column '{url_col}' not found — mismatch detection will be skipped.")
+    st.warning(f"Column '{url_col}' not found - mismatch detection will be skipped.")
 
 
 # ── RUN ──────────────────────────────────────────────────────────────
-section("02 — Vectorise Keywords & Score")
+section("02 - Vectorise Keywords & Score")
 
 ready = (emb_df is not None and emb_col is not None and kw_df is not None and api_key)
 if not api_key:
@@ -310,7 +309,7 @@ if run_btn or resume_btn:
                     elif resp.status_code == 429:
                         retry_match = re.search(r'retry in (\d+)', resp.text)
                         wait = int(retry_match.group(1)) + 2 if retry_match else 60
-                        status.caption(f"Rate limit hit — waiting {wait}s... ({i+1}/{n})")
+                        status.caption(f"Rate limit hit - waiting {wait}s... ({i+1}/{n})")
                         time.sleep(wait)
                     else:
                         st.error(f"API error: {resp.status_code} {resp.text}")
@@ -409,7 +408,7 @@ if run_btn or resume_btn:
 # ── RESULTS ──────────────────────────────────────────────────────────
 if 'uc3_results' in st.session_state:
     out_df = st.session_state['uc3_results']
-    section("03 — Results")
+    section("03 - Results")
 
     strong   = (out_df['Relevance Tier'] == '🟢 Strong').sum()
     moderate = (out_df['Relevance Tier'] == '🟡 Moderate').sum()
@@ -424,7 +423,7 @@ if 'uc3_results' in st.session_state:
 
     st.markdown("")
 
-    tab1, tab2, tab3 = st.tabs(["All Keywords", "🔴 Weak — Fix First", "⚡ Mismatches"])
+    tab1, tab2, tab3 = st.tabs(["All Keywords", "🔴 Weak - Fix First", "⚡ Mismatches"])
 
     with tab1:
         st.dataframe(
@@ -453,7 +452,7 @@ if 'uc3_results' in st.session_state:
         else:
             st.success("No mismatches detected.")
 
-    section("04 — Export")
+    section("04 - Export")
     csv = out_df.to_csv(index=False).encode()
     st.download_button(
         "⬇  Download keyword_relevance_scores.csv",
