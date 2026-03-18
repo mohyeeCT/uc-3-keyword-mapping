@@ -247,7 +247,7 @@ if not api_key:
     st.info("Add your API key in the sidebar to enable keyword vectorisation.")
 
 run_btn = st.button("▶  Run Analysis", disabled=not ready)
-resume_btn = st.button("⏩  Resume from checkpoint", disabled=not (ready and "kw_cache" in st.session_state and len(st.session_state.get("kw_cache", {})) > 0))
+resume_btn = st.button("Resume from checkpoint", disabled=not (ready and "kw_cache" in st.session_state and len(st.session_state.get("kw_cache", {})) > 0))
 
 if "kw_cache" in st.session_state and st.session_state.kw_cache:
     cached_count = len(st.session_state.kw_cache)
