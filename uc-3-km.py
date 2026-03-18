@@ -385,11 +385,11 @@ if run_btn or resume_btn:
             if cur_relevance is None:
                 tier = 'Unknown'
             elif cur_relevance >= high_thresh:
-                tier = '🟢 Strong'
+                tier = 'Strong'
             elif cur_relevance >= low_thresh:
-                tier = '🟡 Moderate'
+                tier = 'Moderate'
             else:
-                tier = '🔴 Weak'
+                tier = 'Weak'
 
             results.append({
                 'Keyword': kw,
@@ -410,20 +410,20 @@ if 'uc3_results' in st.session_state:
     out_df = st.session_state['uc3_results']
     section("03 - Results")
 
-    strong   = (out_df['Relevance Tier'] == '🟢 Strong').sum()
-    moderate = (out_df['Relevance Tier'] == '🟡 Moderate').sum()
-    weak     = (out_df['Relevance Tier'] == '🔴 Weak').sum()
+    strong   = (out_df['Relevance Tier'] == 'Strong').sum()
+    moderate = (out_df['Relevance Tier'] == 'Moderate').sum()
+    weak     = (out_df['Relevance Tier'] == 'Weak').sum()
     mismatches = out_df['Mismatch'].sum() if out_df['Mismatch'].dtype == bool else 0
 
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("🟢 Strong", f"{strong:,}")
-    m2.metric("🟡 Moderate", f"{moderate:,}")
-    m3.metric("🔴 Weak", f"{weak:,}")
-    m4.metric("⚡ Mismatches", f"{mismatches:,}")
+    m1.metric("Strong", f"{strong:,}")
+    m2.metric("Moderate", f"{moderate:,}")
+    m3.metric("Weak", f"{weak:,}")
+    m4.metric("Mismatches", f"{mismatches:,}")
 
     st.markdown("")
 
-    tab1, tab2, tab3 = st.tabs(["All Keywords", "🔴 Weak - Fix First", "⚡ Mismatches"])
+    tab1, tab2, tab3 = st.tabs(["All Keywords", "Weak - Fix First", "Mismatches"])
 
     with tab1:
         st.dataframe(
@@ -436,7 +436,7 @@ if 'uc3_results' in st.session_state:
         )
 
     with tab2:
-        weak_df = out_df[out_df['Relevance Tier'] == '🔴 Weak'].sort_values('Current Page Relevance')
+        weak_df = out_df[out_df['Relevance Tier'] == 'Weak'].sort_values('Current Page Relevance')
         if len(weak_df):
             st.dataframe(weak_df, use_container_width=True, hide_index=True,
                 column_config={'Best Match Score': st.column_config.ProgressColumn(min_value=0, max_value=1, format="%.3f"),
@@ -460,8 +460,8 @@ if 'uc3_results' in st.session_state:
     )
     with st.expander("How to action this data"):
         st.markdown("""
-- **🔴 Weak + Mismatch = True** → wrong page ranking. Create a dedicated page or consolidate content.
-- **🔴 Weak + Mismatch = False** → right page, but needs significant content depth added.
-- **🟡 Moderate** → review content. Consider expanding coverage or tightening focus.
-- **🟢 Strong + poor rankings** → content is fine. Investigate links, CWV, or technical issues.
+- **Weak + Mismatch = True** → wrong page ranking. Create a dedicated page or consolidate content.
+- **Weak + Mismatch = False** → right page, but needs significant content depth added.
+- **Moderate** → review content. Consider expanding coverage or tightening focus.
+- **Strong + poor rankings** → content is fine. Investigate links, CWV, or technical issues.
 """)
